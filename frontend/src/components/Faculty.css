@@ -1,0 +1,36 @@
+/* Faculty Section */
+.content-section {
+    padding: 20px;
+    background-color: #f8f9fa;
+}
+
+.content-section h2 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #343a40;
+    margin-bottom: 20px;
+}
+
+.table th {
+    font-weight: 600;
+    color: #1a237e;
+}
+
+.table td {
+    color: #343a40;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background-color: #1a237e;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
