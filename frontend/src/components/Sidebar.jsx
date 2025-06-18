@@ -26,11 +26,6 @@ function Sidebar() {
           </NavLink>
         </li>
         <li>
-          <NavLink to="/schedule" className={({ isActive }) => (isActive ? "active" : "")}>
-            <i className="fas fa-calendar-alt"></i> Schedule
-          </NavLink>
-        </li>
-        <li>
           <NavLink to="/reports" className={({ isActive }) => (isActive ? "active" : "")}>
             <i className="fas fa-chart-bar"></i> Reports
           </NavLink>

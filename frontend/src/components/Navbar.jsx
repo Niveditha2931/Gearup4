@@ -16,7 +16,7 @@ function Navbar() {
           </a>
           <div className="nav-profile">
             <img
-              src="IMG/Profile-DWMY1YUr.png"
+              src="frontend\src\assests\Profile-DWMY1YUr.png"
               alt="Profile"
               className="profile-img"
             />

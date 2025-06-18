@@ -5,17 +5,8 @@ import CanvasJSReact from '@canvasjs/react-charts';
 const CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 function Dashboard() {
-  // State for chart data
-  const [attendanceData, setAttendanceData] = useState({
-    daily: [],
-    weekly: [],
-    monthly: []
-  });
-  const [feeCollectionData, setFeeCollectionData] = useState([]);
-  
-  // Active view state
-  const [activeView, setActiveView] = useState('daily');
-  
+
+  const [feeCollectionData, setFeeCollectionData] = useState([]);  
   // Stats counters with animation
   const [stats, setStats] = useState({
     students: 0,
@@ -33,49 +24,7 @@ function Dashboard() {
   };
   
   useEffect(() => {
-    // Generate attendance data for different views
-    // Daily data
-    const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const dailyPresentData = [85, 91, 87, 93, 90, 86, 92];
-    const dailyAbsentData = [15, 9, 13, 7, 10, 14, 8];
-    
-    const newDailyData = weekdays.map((day, index) => ({
-      x: index,
-      label: day,
-      present: dailyPresentData[index],
-      absent: dailyAbsentData[index]
-    }));
-    
-    // Weekly data (4 weeks)
-    const weeks = ["Week 1", "Week 2", "Week 3", "Week 4"];
-    const weeklyPresentData = [88, 86, 89, 91];
-    const weeklyAbsentData = [12, 14, 11, 9];
-    
-    const newWeeklyData = weeks.map((week, index) => ({
-      x: index,
-      label: week,
-      present: weeklyPresentData[index],
-      absent: weeklyAbsentData[index]
-    }));
-    
-    // Monthly data (6 months)
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-    const monthlyPresentData = [87, 85, 86, 88, 89, 90];
-    const monthlyAbsentData = [13, 15, 14, 12, 11, 10];
-    
-    const newMonthlyData = months.map((month, index) => ({
-      x: index,
-      label: month,
-      present: monthlyPresentData[index],
-      absent: monthlyAbsentData[index]
-    }));
-    
-    setAttendanceData({
-      daily: newDailyData,
-      weekly: newWeeklyData,
-      monthly: newMonthlyData
-    });
-    
+  
     // Set fee collection data
     setFeeCollectionData([
       { y: 45000, name: "Collected", color: "#4CAF50" },
@@ -109,88 +58,7 @@ function Dashboard() {
     return () => clearInterval(timer);
   }, []);
   
-  // Handle view change
-  const handleViewChange = (view) => {
-    setActiveView(view);
-  };
-  
-  // Get current attendance data based on active view
-  const getCurrentAttendanceData = () => {
-    return attendanceData[activeView] || [];
-  };
 
-  // Chart options for attendance
-  const getAttendanceOptions = () => {
-    const currentData = getCurrentAttendanceData();
-    
-    let subtitle = "";
-    switch(activeView) {
-      case 'weekly':
-        subtitle = "Weekly Attendance (Last 4 Weeks)";
-        break;
-      case 'monthly':
-        subtitle = "Monthly Attendance (Last 6 Months)";
-        break;
-      default:
-        subtitle = "Daily Attendance (Last Week)";
-    }
-    
-    return {
-      animationEnabled: true,
-      title: {
-        text: ""
-      },
-      subtitles: [{
-        text: subtitle,
-        fontSize: 14,
-        horizontalAlign: "left"
-      }],
-      axisX: {
-        title: "",
-        valueFormatString: " "
-      },
-      axisY: {
-        title: "",
-        suffix: "%",
-        minimum: 0,
-        maximum: 100
-      },
-      toolTip: {
-        shared: true
-      },
-      legend: {
-        cursor: "pointer",
-        verticalAlign: "top",
-        horizontalAlign: "center"
-      },
-      data: [
-        {
-          type: "line",
-          name: "Present",
-          showInLegend: true,
-          markerType: "circle",
-          color: "#3f51b5",
-          lineThickness: 3,
-          dataPoints: currentData.map(data => ({
-            label: data.label,
-            y: data.present
-          }))
-        },
-        {
-          type: "line",
-          name: "Absent",
-          showInLegend: true,
-          markerType: "circle",
-          color: "#e91e63",
-          lineThickness: 3,
-          dataPoints: currentData.map(data => ({
-            label: data.label,
-            y: data.absent
-          }))
-        }
-      ]
-    };
-  };
   
   // Chart options for fee collection
   const feeOptions = {
@@ -284,42 +152,9 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Attendance and Fee Collection Charts */}
+
       <div className="row g-4 mb-4">
-        {/* Attendance Summary */}
-        <div className="col-md-8">
-          <div className="card">
-            <div className="card-header d-flex justify-content-between align-items-center">
-              <h5 className="m-0">Attendance Summary</h5>
-              <div className="btn-group" role="group">
-                <button 
-                  type="button" 
-                  className={`btn btn-sm ${activeView === 'daily' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => handleViewChange('daily')}
-                >
-                  Daily
-                </button>
-                <button 
-                  type="button" 
-                  className={`btn btn-sm ${activeView === 'weekly' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => handleViewChange('weekly')}
-                >
-                  Weekly
-                </button>
-                <button 
-                  type="button" 
-                  className={`btn btn-sm ${activeView === 'monthly' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => handleViewChange('monthly')}
-                >
-                  Monthly
-                </button>
-              </div>
-            </div>
-            <div className="card-body">
-              <CanvasJSChart options={getAttendanceOptions()} />
-            </div>
-          </div>
-        </div>
+    
 
         {/* Fee Collection */}
         <div className="col-md-4">

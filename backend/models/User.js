@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
     status: { type: String, default: 'Active' },
     password:{type:String,required:true},
     role: { type: String, 
-        enum: ["student", "admin", "instructor"], 
+        enum: ["student", "admin"], 
         required: true },
 },{"strict":"throw"});
 

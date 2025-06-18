@@ -1,11 +1,10 @@
-const enrollmentSchema = new mongoose.Schema({
+const mongoose = require('mongoose'); // Import mongoose
 
-  student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+const enrollmentSchema = new mongoose.Schema({
+  student: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
   course: { type: String, required: true },
+  paymentAmount: { type: Number, default: 0 },
   enrollmentDate: { type: Date, default: Date.now },
-  paymentStatus: { type: String, default: 'Pending' },
-  paymentAmount: { type: Number, required: true },
-  paymentDate: { type: Date }
 });
 
-const Enrollment = mongoose.model('Enrollment', enrollmentSchema);
+module.exports = mongoose.model('Enrollment', enrollmentSchema);
