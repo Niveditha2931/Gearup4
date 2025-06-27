@@ -1,5 +1,5 @@
 import { createContext,useState } from "react";
-export const userAuthorContextObj=createContext();
+export const userAdminContextObj=createContext();
 
 function UserAdmin({children}) {
     let[currentUser,setCurrentUser]=useState({
@@ -7,13 +7,13 @@ function UserAdmin({children}) {
         lastName:'',
         email:"",
         profileImageUrl:'',
-        role:''
+        role:""
       })
         return (
         <div>
-          <userAuthorContextObj.Provider value={{currentUser,setCurrentUser}}>
+          <userAdminContextObj.Provider value={{currentUser,setCurrentUser}}>
             {children}
-          </userAuthorContextObj.Provider>
+          </userAdminContextObj.Provider>
         </div>
       )
   

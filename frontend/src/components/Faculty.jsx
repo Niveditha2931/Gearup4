@@ -1,13 +1,103 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import './Faculty.css';
+import { useNavigate } from 'react-router-dom';
 
 function Faculty() {
   const [activeTab, setActiveTab] = useState('teacherList'); // State to track the active tab
+  const [lecturers,setLecturers]=useState(0)
+  const [active,setActive]=useState(0)
+  const [lecturerList,setLecturerList]=useState([])
+  const navigate=useNavigate()
 
-  // Sample teacher data
-  const teachers = [
-    { id: 'TCH001', name: 'John Smith', department: 'Mathematics', contact: '+91 98765 43210', status: 'Active' },
-  ];
+  // Add state for registration form fields
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    experience: '',
+    joiningDate: '',
+    password: '',
+    number: ''
+  });
+  const [formMsg, setFormMsg] = useState('');
+
+  // Fetch lecturer list (for reuse)
+  const fetchLecturerList = useCallback(async () => {
+    try {
+      let res = await axios.get("http://localhost:5000/api/admin/getLecturerList");
+      setLecturerList(res.data.lecList);
+    } catch (e) {
+      console.log(e.message);
+    }
+  }, []);
+
+  // Fetch total and active lecturers
+  const fetchCounts = useCallback(async () => {
+    try {
+      let res1 = await axios.get("http://localhost:5000/api/admin/getTotalLecturers");
+      setLecturers(res1.data.lecturers);
+      let res2 = await axios.get("http://localhost:5000/api/admin/getActiveLecturers");
+      setActive(res2.data.active);
+    } catch (e) {
+      console.log(e.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCounts();
+    fetchLecturerList();
+  }, [fetchCounts, fetchLecturerList]);
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle form submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormMsg('');
+    try {
+      const payload = {
+        ...form,
+        experience: Number(form.experience),
+        role: "lecturer"
+      };
+      if (!payload.password) payload.password = 'lecturer@123';
+
+      await axios.post('http://localhost:5000/api/auth/lecturerReg', payload);
+      setFormMsg('Lecturer registered successfully!');
+      setForm({
+        firstName: '',
+        lastName: '',
+        email: '',
+        experience: '',
+        joiningDate: '',
+        password: '',
+        number: ''
+      });
+      navigate("/faculty")
+    } catch (err) {
+      setFormMsg('Registration failed: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  // Toggle lecturer status (Active/Inactive)
+  const handleToggleStatus = async (lecturerId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
+      await axios.put(`http://localhost:5000/api/admin/updateLecturerStatus/${lecturerId}`, { status: newStatus });
+      await fetchLecturerList();
+      await fetchCounts();
+    } catch (e) {
+      console.log(e.message)
+    }
+  };
 
   // Render Teacher List
   const renderTeacherList = () => (
@@ -15,33 +105,36 @@ function Faculty() {
       <table className="table table-hover">
         <thead className="table-light">
           <tr>
-            <th>Teacher ID</th>
+            <th>Lecturer ID</th>
             <th>Name</th>
-            <th>Department</th>
-            <th>Contact</th>
-            <th>Status</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Experience</th>
+            <th>Joining Date</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {teachers.map((teacher) => (
-            <tr key={teacher.id}>
-              <td>{teacher.id}</td>
-              <td>{teacher.name}</td>
-              <td>{teacher.department}</td>
-              <td>{teacher.contact}</td>
+          {lecturerList.map((lecturer) => (
+            <tr key={lecturer._id}>
+              <td>{lecturer._id}</td>
+              <td>{lecturer.firstName} {lecturer.lastName}</td>
+              <td>{lecturer.email}</td>
+              <td>{lecturer.number}</td>
+              <td>{lecturer.experience}</td>
+              <td>{lecturer.joiningDate ? new Date(lecturer.joiningDate).toLocaleDateString() : ''}</td>
               <td>
-                <span className={`badge ${teacher.status === 'Active' ? 'bg-success' : 'bg-secondary'}`}>
-                  {teacher.status}
+                <span className={`badge ${lecturer.status === 'Active' ? 'bg-success' : 'bg-secondary'}`}>
+                  {lecturer.status}
                 </span>
               </td>
               <td>
                 <div className="btn-group">
-                  <button className="btn btn-sm btn-primary">
-                    <i className="bi bi-pencil-square"></i>
-                  </button>
-                  <button className="btn btn-sm btn-danger">
-                    <i className="bi bi-trash"></i>
+                  <button
+                    className={`btn btn-sm ${lecturer.status === 'Active' ? 'btn-danger' : 'btn-primary'} ms-2`}
+                    onClick={() => handleToggleStatus(lecturer._id, lecturer.status)}
+                  >
+                    {lecturer.status === 'Active' ? 'Disable' : 'Enable'}
                   </button>
                 </div>
               </td>
@@ -55,61 +148,105 @@ function Faculty() {
   // Render Add New Teacher Form
   const renderAddTeacherForm = () => (
     <div>
-      <h5>Add New Teacher</h5>
-      <form>
+      <h5>Add New Lecturer</h5>
+      {formMsg && (
+        <div className={`alert ${formMsg.startsWith('Lecturer registered') ? 'alert-success' : 'alert-danger'}`}>
+          {formMsg}
+        </div>
+      )}
+      <form onSubmit={handleSubmit}>
         <div className="row mb-3">
           <div className="col-md-6">
-            <label>Full Name</label>
-            <input type="text" className="form-control" placeholder="Enter full name" />
+            <label>First Name</label>
+            <input
+              type="text"
+              className="form-control"
+              name="firstName"
+              placeholder="Enter first name"
+              value={form.firstName}
+              onChange={handleInputChange}
+              required
+            />
           </div>
+          <div className="col-md-6">
+            <label>Last Name</label>
+            <input
+              type="text"
+              className="form-control"
+              name="lastName"
+              placeholder="Enter last name"
+              value={form.lastName}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+        </div>
+        <div className="row mb-3">
           <div className="col-md-6">
             <label>Email</label>
-            <input type="email" className="form-control" placeholder="Enter email" />
+            <input
+              type="email"
+              className="form-control"
+              name="email"
+              placeholder="Enter email"
+              value={form.email}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="col-md-6">
+            <label>Phone Number</label>
+            <input
+              type="text"
+              className="form-control"
+              name="number"
+              placeholder="Enter phone number"
+              value={form.number}
+              onChange={handleInputChange}
+            />
           </div>
         </div>
         <div className="row mb-3">
-          <div className="col-md-6">
-            <label>Contact Number</label>
-            <input type="text" className="form-control" placeholder="Enter contact number" />
-          </div>
-          <div className="col-md-6">
-            <label>Department</label>
-            <select className="form-control">
-              <option>Select Department</option>
-              <option>Mathematics</option>
-              <option>Physics</option>
-              <option>Chemistry</option>
-            </select>
-          </div>
-        </div>
-        <div className="row mb-3">
-          <div className="col-md-6">
-            <label>Qualification</label>
-            <input type="text" className="form-control" placeholder="Enter qualification" />
-          </div>
           <div className="col-md-6">
             <label>Experience (Years)</label>
-            <input type="number" className="form-control" placeholder="Enter experience" />
+            <input
+              type="number"
+              className="form-control"
+              name="experience"
+              placeholder="Enter experience"
+              value={form.experience}
+              onChange={handleInputChange}
+              min="0"
+              required
+            />
           </div>
-        </div>
-        <div className="row mb-3">
           <div className="col-md-6">
             <label>Joining Date</label>
-            <input type="date" className="form-control" />
-          </div>
-          <div className="col-md-6">
-            <label>Salary</label>
-            <input type="number" className="form-control" placeholder="Enter salary" />
+            <input
+              type="date"
+              className="form-control"
+              name="joiningDate"
+              value={form.joiningDate}
+              onChange={handleInputChange}
+              required
+            />
           </div>
         </div>
         <div className="row mb-3">
           <div className="col-md-12">
-            <label>Specialization</label>
-            <input type="text" className="form-control" placeholder="Enter specialization" />
+            <label>Password</label>
+            <input
+              type="password"
+              className="form-control"
+              name="password"
+              placeholder="Set password (default: lecturer@123)"
+              value={form.password}
+              onChange={handleInputChange}
+            />
           </div>
         </div>
         <button type="submit" className="btn btn-primary">
-          Save Teacher
+          Save Lecturer
         </button>
       </form>
     </div>
@@ -119,35 +256,19 @@ function Faculty() {
     <div className="container-fluid">
       {/* Main Content */}
       <div className="row mb-4">
-        <div className="col-md-3">
+        <div className="col-md-6">
           <div className="card">
             <div className="card-body text-center">
-              <h6>Total Teachers</h6>
-              <h4>85</h4>
+              <h6>Total Lecturers</h6>
+              <h4>{lecturers}</h4>
             </div>
           </div>
         </div>
-        <div className="col-md-3">
+        <div className="col-md-6">
           <div className="card">
             <div className="card-body text-center">
-              <h6>Active Teachers</h6>
-              <h4>78</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card">
-            <div className="card-body text-center">
-              <h6>Departments</h6>
-              <h4>12</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card">
-            <div className="card-body text-center">
-              <h6>On Leave</h6>
-              <h4>7</h4>
+              <h6>Active Lecturers</h6>
+              <h4>{active}</h4>
             </div>
           </div>
         </div>
@@ -160,7 +281,7 @@ function Faculty() {
             className={`nav-link ${activeTab === 'teacherList' ? 'active' : ''}`}
             onClick={() => setActiveTab('teacherList')}
           >
-            <i className="bi bi-list"></i> Teacher List
+            <i className="bi bi-list"></i> Lecturer List
           </button>
         </li>
         <li className="nav-item">
@@ -168,7 +289,7 @@ function Faculty() {
             className={`nav-link ${activeTab === 'addTeacher' ? 'active' : ''}`}
             onClick={() => setActiveTab('addTeacher')}
           >
-            <i className="bi bi-person-plus"></i> Add New Teacher
+            <i className="bi bi-person-plus"></i> Add New Lecturer
           </button>
         </li>
       </ul>

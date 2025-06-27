@@ -6,7 +6,7 @@ function Sidebar() {
     <div className="sidebar">
       <ul className="sidebar-nav">
         <li>
-          <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink to="/dash" className={({ isActive }) => (isActive ? "active" : "")}>
             <i className="fas fa-tachometer-alt"></i> Dashboard
           </NavLink>
         </li>

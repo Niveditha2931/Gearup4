@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Lecturer = require("../models/Lecturer");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
@@ -16,23 +17,57 @@ const register = async (req, res) => {
   }
 };
 
-// User login
+// Lecturer registration
+const lecturerRegister = async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, experience, joiningDate, number } = req.body;
+    // Check if lecturer already exists
+    const exists = await Lecturer.findOne({ email });
+    if (exists) {
+      return res.status(400).json({ message: "Lecturer already exists" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const lecturer = new Lecturer({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      experience,
+      joiningDate,
+      number
+    });
+    await lecturer.save();
+    res.status(201).json({ message: "Lecturer registered successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Unified login for User and Lecturer
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const { email, password, type } = req.body;
+    let user, modelType;
+
+    if (type === "lecturer") {
+      user = await Lecturer.findOne({ email });
+      modelType = "lecturer";
+    } else {
+      user = await User.findOne({ email });
+      modelType = "user";
+    }
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id, role: user.role || modelType },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.json({ token, user });
+    res.json({ token, user, type: modelType });
   } catch (error) {
     res.status(500).json({ error: "Login failed" });
   }
@@ -40,5 +75,7 @@ const login = async (req, res) => {
 
 module.exports = {
   register,
+  lecturerRegister,
   login,
+  
 };

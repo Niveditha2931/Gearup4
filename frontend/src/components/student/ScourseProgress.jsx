@@ -12,6 +12,29 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 
+const getEmbedUrl = (videoUrl) => {
+  // Google Drive share link: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+  // Embed: https://drive.google.com/file/d/FILE_ID/preview
+  if (!videoUrl) return null;
+  if (videoUrl.includes("drive.google.com")) {
+    const match = videoUrl.match(/\/file\/d\/([^/]+)\//);
+    if (match) {
+      return `https://drive.google.com/file/d/${match[1]}/preview`;
+    }
+  }
+  // YouTube: convert to embed
+  if (videoUrl.includes("youtube.com/watch?v=")) {
+    const id = videoUrl.split("v=")[1].split("&")[0];
+    return `https://www.youtube.com/embed/${id}`;
+  }
+  if (videoUrl.includes("youtu.be/")) {
+    const id = videoUrl.split("youtu.be/")[1].split("?")[0];
+    return `https://www.youtube.com/embed/${id}`;
+  }
+  // Otherwise, return as is (for direct .mp4, etc.)
+  return videoUrl;
+};
+
 const CourseProgress = () => {
   const params = useParams();
   const courseId = params.courseId;
@@ -69,7 +92,6 @@ const CourseProgress = () => {
     handleLectureProgress(lecture._id);
   };
 
-
   const handleCompleteCourse = async () => {
     await completeCourse(courseId);
   };
@@ -100,14 +122,42 @@ const CourseProgress = () => {
         {/* Video section  */}
         <div className="flex-1 md:w-3/5 h-fit rounded-lg shadow-lg p-4">
           <div>
-            <video
-              src={currentLecture?.videoUrl || initialLecture.videoUrl}
-              controls
-              className="w-full h-auto md:rounded-lg"
-              onPlay={() =>
-                handleLectureProgress(currentLecture?._id || initialLecture._id)
+            {/* Show video player or iframe for video lessons */}
+            {(() => {
+              const lecture = currentLecture || initialLecture;
+              const embedUrl = getEmbedUrl(lecture?.videoUrl);
+              if (lecture?.type === "Video" && embedUrl) {
+                if (embedUrl.includes("youtube.com") || embedUrl.includes("drive.google.com")) {
+                  return (
+                    <iframe
+                      src={embedUrl}
+                      title="Video Lesson"
+                      width="100%"
+                      height="400"
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                      className="w-full h-80 md:rounded-lg"
+                    />
+                  );
+                }
+                // Direct .mp4 or other video file
+                return (
+                  <video
+                    src={embedUrl}
+                    controls
+                    className="w-full h-auto md:rounded-lg"
+                    onPlay={() =>
+                      handleLectureProgress(lecture._id)
+                    }
+                  />
+                );
               }
-            />
+              return (
+                <div className="alert alert-warning">
+                  No video available for this lesson.
+                </div>
+              );
+            })()}
           </div>
           {/* Display current watching lecture title */}
           <div className="mt-2 ">

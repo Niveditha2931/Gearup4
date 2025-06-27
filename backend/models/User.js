@@ -17,9 +17,11 @@ const userSchema = new mongoose.Schema({
     status: { type: String, default: 'Active' },
     password:{type:String,required:true},
     role: { type: String, 
-        enum: ["student", "admin"], 
+        enum: ["student","lecturer","admin"], 
         required: true },
-},{"strict":"throw"});
+},{
+    timestamps: true 
+});
 
 
 module.exports = mongoose.model('User', userSchema);

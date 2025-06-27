@@ -1,35 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import './Students.css';
-import axios from 'axios'; // Add axios for API calls
+import axios from 'axios';
 
 const StudentList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [activeTab, setActiveTab] = useState('basic-info');
+  const [students, setStudents] = useState([]);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [activeStudents, setActiveStudents] = useState(0);
+  const [newThisMonth, setNewThisMonth] = useState(0);
+  const [pendingFees, setPendingFees] = useState(0);
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [testResults, setTestResults] = useState([]);
+  const [error, setError] = useState(null);
   const [attendanceSearch, setAttendanceSearch] = useState('');
   const [performanceSearch, setPerformanceSearch] = useState('');
-  const [students, setStudents] = useState([]); // Initialize as an empty array
-  const [attendanceData, setAttendanceData] = useState([]); // Initialize as an empty array
-  const [testResults, setTestResults] = useState([]); // Initialize as an empty array
-  const [error, setError] = useState(null); // Track errors
 
-  // Fetch data from the backend
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchStatsAndList = async () => {
       try {
-        const studentResponse = await axios.get('http://localhost:5000/api/students'); // Ensure correct URL
-        const attendanceResponse = await axios.get('http://localhost:5000/api/attendance');
-        const testResultsResponse = await axios.get('http://localhost:5000/api/test-results');
-        setStudents(studentResponse.data || []); // Fallback to empty array
-        setAttendanceData(attendanceResponse.data || []);
-        setTestResults(testResultsResponse.data || []);
+        const [
+          totalRes,
+          activeRes,
+          newMonthRes,
+          pendingRes,
+          listRes,
+          attendanceRes,
+          testResultsRes
+        ] = await Promise.all([
+          axios.get('http://localhost:5000/api/admin/getTotalStudents'),
+          axios.get('http://localhost:5000/api/admin/getActiveStudents'),
+          axios.get('http://localhost:5000/api/admin/getNewStudentsThisMonth'),
+          axios.get('http://localhost:5000/api/admin/getPendingFees'),
+          axios.get('http://localhost:5000/api/admin/getStudentList'),
+          axios.get('http://localhost:5000/api/admin/getAttendanceData'),
+          axios.get('http://localhost:5000/api/admin/getTestResults')
+        ]);
+        setTotalStudents(totalRes.data.students || 0);
+        setActiveStudents(activeRes.data.active || 0);
+        setNewThisMonth(newMonthRes.data.newThisMonth || 0);
+        setPendingFees(pendingRes.data.pendingFees || 0);
+        setStudents(listRes.data.studentList || []);
+        setAttendanceData(attendanceRes.data.attendance || []);
+        setTestResults(testResultsRes.data.testResults || []);
       } catch (err) {
-        console.error('Error fetching data:', err.message); // Log error message
         setError('Failed to connect to the server. Please ensure the backend is running.');
       }
     };
-    fetchData();
+    fetchStatsAndList();
   }, []);
 
   if (error) {
@@ -37,28 +57,36 @@ const StudentList = () => {
   }
 
   // Filter students based on search term
-  const filteredStudents = students.filter(student => 
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.course.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredStudents = students.filter(student =>
+    (student.firstName + ' ' + student.lastName).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (student._id && student._id.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (student.email && student.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Calculate pagination
+  // Filtered attendance and test results for search
+  const filteredAttendance = attendanceData.filter(record =>
+    (record.subject?.toLowerCase() || '').includes(attendanceSearch.toLowerCase()) ||
+    (record.status?.toLowerCase() || '').includes(attendanceSearch.toLowerCase()) ||
+    (record.remarks?.toLowerCase() || '').includes(attendanceSearch.toLowerCase())
+  );
+
+  const filteredTestResults = testResults.filter(result =>
+    (result.subject?.toLowerCase() || '').includes(performanceSearch.toLowerCase()) ||
+    (result.remarks?.toLowerCase() || '').includes(performanceSearch.toLowerCase())
+  );
+
+  // Pagination
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
   const currentEntries = filteredStudents.slice(indexOfFirstEntry, indexOfLastEntry);
   const totalPages = Math.ceil(filteredStudents.length / entriesPerPage);
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
   // Render Academic Details Section
@@ -73,6 +101,8 @@ const StudentList = () => {
             <select 
               className="form-select form-select-sm d-inline-block mx-2" 
               style={{ width: '70px' }}
+              // Optionally, you can implement pagination for attendance
+              disabled
             >
               <option value="10">10</option>
               <option value="25">25</option>
@@ -102,30 +132,29 @@ const StudentList = () => {
               </tr>
             </thead>
             <tbody>
-              {attendanceData.map((record, index) => (
-                <tr key={index}>
-                  <td>{record.date}</td>
-                  <td>{record.subject}</td>
-                  <td>
-                    <span className={`badge ${record.status === 'Present' ? 'bg-success' : 'bg-danger'}`}>
-                      {record.status}
-                    </span>
-                  </td>
-                  <td>{record.remarks}</td>
+              {filteredAttendance.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="text-center">No attendance records found.</td>
                 </tr>
-              ))}
+              ) : (
+                filteredAttendance.map((record, index) => (
+                  <tr key={index}>
+                    <td>{record.date ? new Date(record.date).toLocaleDateString() : ''}</td>
+                    <td>{record.subject}</td>
+                    <td>
+                      <span className={`badge ${record.status === 'Present' ? 'bg-success' : 'bg-danger'}`}>
+                        {record.status}
+                      </span>
+                    </td>
+                    <td>{record.remarks}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
-        <div className="d-flex justify-content-between align-items-center">
-          <div>Showing 1 to 1 of 1 entries</div>
-          <div className="pagination">
-            <button className="btn btn-outline-primary me-2">Previous</button>
-            <button className="btn btn-primary me-2">1</button>
-            <button className="btn btn-outline-primary">Next</button>
-          </div>
-        </div>
+        {/* Optionally implement pagination for attendance if needed */}
       </div>
 
       {/* Test Results */}
@@ -137,6 +166,7 @@ const StudentList = () => {
             <select 
               className="form-select form-select-sm d-inline-block mx-2" 
               style={{ width: '70px' }}
+              disabled
             >
               <option value="10">10</option>
               <option value="25">25</option>
@@ -167,27 +197,25 @@ const StudentList = () => {
               </tr>
             </thead>
             <tbody>
-              {testResults.map((result, index) => (
-                <tr key={index}>
-                  <td>{result.date}</td>
-                  <td>{result.subject}</td>
-                  <td>{result.score}</td>
-                  <td>{result.rank}</td>
-                  <td>{result.remarks}</td>
+              {filteredTestResults.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center">No test results found.</td>
                 </tr>
-              ))}
+              ) : (
+                filteredTestResults.map((result, index) => (
+                  <tr key={index}>
+                    <td>{result.date ? new Date(result.date).toLocaleDateString() : ''}</td>
+                    <td>{result.subject}</td>
+                    <td>{result.score}</td>
+                    <td>{result.rank}</td>
+                    <td>{result.remarks}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-
-        <div className="d-flex justify-content-between align-items-center">
-          <div>Showing 1 to 1 of 1 entries</div>
-          <div className="pagination">
-            <button className="btn btn-outline-primary me-2">Previous</button>
-            <button className="btn btn-primary me-2">1</button>
-            <button className="btn btn-outline-primary">Next</button>
-          </div>
-        </div>
+        {/* Optionally implement pagination for test results if needed */}
       </div>
     </div>
   );
@@ -204,7 +232,7 @@ const StudentList = () => {
                 </div>
                 <div>
                   <h6 className="mb-0">Total Students</h6>
-                  <h4 className="mb-0">1,234</h4>
+                  <h4 className="mb-0">{totalStudents}</h4>
                 </div>
               </div>
             </div>
@@ -219,7 +247,7 @@ const StudentList = () => {
                 </div>
                 <div>
                   <h6 className="mb-0">Active Students</h6>
-                  <h4 className="mb-0">1,180</h4>
+                  <h4 className="mb-0">{activeStudents}</h4>
                 </div>
               </div>
             </div>
@@ -234,7 +262,7 @@ const StudentList = () => {
                 </div>
                 <div>
                   <h6 className="mb-0">New This Month</h6>
-                  <h4 className="mb-0">48</h4>
+                  <h4 className="mb-0">{newThisMonth}</h4>
                 </div>
               </div>
             </div>
@@ -249,7 +277,7 @@ const StudentList = () => {
                 </div>
                 <div>
                   <h6 className="mb-0">Pending Fees</h6>
-                  <h4 className="mb-0">25</h4>
+                  <h4 className="mb-0">{pendingFees}</h4>
                 </div>
               </div>
             </div>
@@ -261,10 +289,10 @@ const StudentList = () => {
         <div className="card-body">
           <ul className="nav nav-tabs mb-3">
             <li className="nav-item">
-              <a 
-                className={`nav-link ${activeTab === 'basic-info' ? 'active' : ''}`} 
+              <a
+                className={`nav-link ${activeTab === 'basic-info' ? 'active' : ''}`}
                 href="#basic-info"
-                onClick={(e) => {
+                onClick={e => {
                   e.preventDefault();
                   setActiveTab('basic-info');
                 }}
@@ -292,12 +320,12 @@ const StudentList = () => {
             <>
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <div className="entries">
-                  Show 
-                  <select 
-                    className="form-select form-select-sm d-inline-block mx-2" 
+                  Show
+                  <select
+                    className="form-select form-select-sm d-inline-block mx-2"
                     style={{ width: '70px' }}
                     value={entriesPerPage}
-                    onChange={(e) => setEntriesPerPage(Number(e.target.value))}
+                    onChange={e => setEntriesPerPage(Number(e.target.value))}
                   >
                     <option value="10">10</option>
                     <option value="25">25</option>
@@ -311,12 +339,12 @@ const StudentList = () => {
                     <span className="input-group-text bg-white">
                       <i className="bi bi-search"></i>
                     </span>
-                    <input 
-                      type="text" 
-                      className="form-control" 
+                    <input
+                      type="text"
+                      className="form-control"
                       placeholder="Search students..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={e => setSearchTerm(e.target.value)}
                     />
                   </div>
                 </div>
@@ -326,23 +354,19 @@ const StudentList = () => {
                 <table className="table table-hover">
                   <thead className="table-light">
                     <tr>
-                      <th>Student ID <i className="bi bi-arrow-down-up"></i></th>
-                      <th>Name <i className="bi bi-arrow-down-up"></i></th>
-                      <th>Contact <i className="bi bi-arrow-down-up"></i></th>
-                      <th>Course <i className="bi bi-arrow-down-up"></i></th>
-                      <th>Batch <i className="bi bi-arrow-down-up"></i></th>
-                      <th>Status <i className="bi bi-arrow-down-up"></i></th>
-                      <th>Actions <i className="bi bi-arrow-down-up"></i></th>
+                      <th>Student ID</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {currentEntries.map((student) => (
-                      <tr key={student.id}>
-                        <td>{student.id}</td>
-                        <td>{student.name}</td>
-                        <td>{student.contact}</td>
-                        <td>{student.course}</td>
-                        <td>{student.batch}</td>
+                    {currentEntries.map(student => (
+                      <tr key={student._id}>
+                        <td>{student._id}</td>
+                        <td>{student.firstName} {student.lastName}</td>
+                        <td>{student.email}</td>
                         <td>
                           <span className={`badge ${student.status === 'Active' ? 'bg-success' : 'bg-secondary'}`}>
                             {student.status}
@@ -369,20 +393,18 @@ const StudentList = () => {
                   Showing {indexOfFirstEntry + 1} to {Math.min(indexOfLastEntry, filteredStudents.length)} of {filteredStudents.length} entries
                 </div>
                 <div className="pagination">
-                  <button 
-                    className="btn btn-outline-primary me-2" 
+                  <button
+                    className="btn btn-outline-primary me-2"
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
                   >
                     Previous
                   </button>
-                  <button 
-                    className="btn btn-primary me-2"
-                  >
+                  <button className="btn btn-primary me-2">
                     {currentPage}
                   </button>
-                  <button 
-                    className="btn btn-outline-primary" 
+                  <button
+                    className="btn btn-outline-primary"
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                   >

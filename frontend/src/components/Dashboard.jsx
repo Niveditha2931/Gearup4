@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import './Dashboard.css';
 import CanvasJSReact from '@canvasjs/react-charts';
 
@@ -6,21 +7,26 @@ const CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 function Dashboard() {
 
+  const [students,setStudents]=useState(0)
+  const [lecturers,setLecturers]=useState(0)
+  const [courses,setCourses]=useState(0)
+  // const [revenue,setRevenue]=useState(0)
+
   const [feeCollectionData, setFeeCollectionData] = useState([]);  
   // Stats counters with animation
   const [stats, setStats] = useState({
     students: 0,
-    teachers: 0,
+    lecturers: 0,
     courses: 0,
-    revenue: 0
+    // revenue: 0
   });
   
   // Target values for counting animation
-  const targetStats = {
-    students: 1234,
-    teachers: 85,
-    courses: 42,
-    revenue: 52234
+  const targetStats = { 
+    students:students,
+    lecturers: lecturers,
+    courses: courses,
+    // revenue: revenue
   };
   
   useEffect(() => {
@@ -35,9 +41,7 @@ function Dashboard() {
     const duration = 2000; // 2 seconds animation
     const steps = 50;
     const interval = duration / steps;
-    
     let currentStep = 0;
-    
     const timer = setInterval(() => {
       currentStep++;
       
@@ -55,11 +59,52 @@ function Dashboard() {
       }
     }, interval);
     
+    const fetchTotalStudents = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/admin/getTotalStudents");
+        setStudents(res.data.students);
+      } catch (err) {
+        console.log(err)
+      }
+    };
+
+    const fetchTotalLecturers = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/admin/getTotalLecturers");
+        setLecturers(res.data.lecturers);
+      } catch (err) {
+        console.log(err)
+      }
+    };
+
+
+    const fetchTotalCourses = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/admin/getTotalCourses");
+        setCourses(res.data.courses);
+      } catch (err) {
+        console.log(err)
+      }
+    };
+
+    // const fetchTotalRevenue = async () => {
+    //   try {
+    //     const res = await axios.get("http://localhost:5000/api/admin/getTotalRevenue");
+    //     setStudents(res.data.students);
+    //   } catch (err) {
+    //     console.log(err)
+    //   }
+    // };
+   
+    fetchTotalStudents();
+    fetchTotalLecturers();
+    fetchTotalCourses();
+    //fetchTotalRevenue();
+
     return () => clearInterval(timer);
   }, []);
   
-
-  
+ 
   // Chart options for fee collection
   const feeOptions = {
     animationEnabled: true,
@@ -81,12 +126,13 @@ function Dashboard() {
     }]
   };
 
+
   return (
     <div id="dashboard" className="dashboard m-0">
       <h2 className="mt-2">Dashboard Overview</h2>
 
       {/* Stats Cards */}
-      <div className="row g-4 mb-4 mt-2">
+      <div className="row g-4 mb-4">
         {/* Total Students */}
         <div className="col-md-6 col-lg-3">
           <div className="card stat-card">
@@ -94,10 +140,7 @@ function Dashboard() {
               <i className="fas fa-user-graduate fa-3x me-3 text-primary"></i>
               <div>
                 <h6>Total Students</h6>
-                <h3>{stats.students}</h3>
-                <small className="text-success">
-                  <i className="fas fa-arrow-up"></i> 12% increase
-                </small>
+                <h3>{students}</h3>
               </div>
             </div>
           </div>
@@ -109,11 +152,8 @@ function Dashboard() {
             <div className="card-body d-flex align-items-center">
               <i className="fas fa-chalkboard-teacher fa-3x me-3 text-primary"></i>
               <div>
-                <h6>Total Teachers</h6>
-                <h3>{stats.teachers}</h3>
-                <small className="text-success">
-                  <i className="fas fa-arrow-up"></i> 5% increase
-                </small>
+                <h6>Total Lecturers</h6>
+                <h3>{lecturers}</h3>
               </div>
             </div>
           </div>
@@ -126,30 +166,24 @@ function Dashboard() {
               <i className="fas fa-book-open fa-3x me-3 text-primary"></i>
               <div>
                 <h6>Active Courses</h6>
-                <h3>{stats.courses}</h3>
-                <small className="text-warning">
-                  <i className="fas fa-arrow-right"></i> Stable
-                </small>
+                <h3>{courses}</h3>
               </div>
             </div>
           </div>
         </div>
 
         {/* Total Revenue */}
-        <div className="col-md-6 col-lg-3">
+        {/* <div className="col-md-6 col-lg-3">
           <div className="card stat-card">
             <div className="card-body d-flex align-items-center">
               <i className="fas fa-dollar-sign fa-3x me-3 text-primary"></i>
               <div>
                 <h6>Revenue</h6>
-                <h3>${Math.floor(stats.revenue/1000)}K</h3>
-                <small className="text-success">
-                  <i className="fas fa-arrow-up"></i> 8% increase
-                </small>
+                <h3>${Math.floor(revenue/1000)}K</h3>
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
 

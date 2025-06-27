@@ -10,6 +10,7 @@ const settingsRoutes = require('./routes/settingsRoutes')
 const categoryRoutes = require("./routes/categoryRoutes");
 const authRoutes = require("./routes/authRoutes");
 const studentRoutes = require("./routes/studentRoutes"); // Import student routes
+const adminRoutes=require("./routes/adminRoutes") 
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +21,7 @@ app.use(cors());
 
 // Connect Database
 connectDB();
+
 
 // Mock database (replace with actual database connection)
 const students = [
@@ -70,6 +72,7 @@ app.get('/api/courses/all', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes); // Use authRoutes for authentication-related routes
 app.use('/api/students', studentRoutes); // Student routes
+app.use('/api/admin',adminRoutes)
 app.use('/api/courses', require('./routes/courseRoutes'));
 app.use("/api", lessonRoutes);
 app.use("/api/quizzes", quizRoutes);
