@@ -85,6 +85,20 @@ function Register({ onSuccess }) {
             required
           />
         </div>
+        
+      <div className="mb-3">
+        <label>Role</label>
+        <select
+          className="form-control"
+          name="role"
+          value={form.role}
+          onChange={handleChange}
+          required
+        >
+          <option value="student">Student</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
         <button type="submit" className="btn btn-primary w-100">Register</button>
       </form>
     </div>

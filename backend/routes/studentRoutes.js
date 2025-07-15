@@ -3,6 +3,7 @@ const Student = require("../models/Student");
 const Enrollment = require("../models/Enrollment");
 const AcademicRecord = require("../models/AcademicRecord");
 const Attendance = require("../models/Attendance");
+const Course = require("../models/Course");
 
 const router = express.Router();
 
@@ -104,6 +105,17 @@ router.delete("/:id", async (req, res) => {
     await Attendance.deleteMany({ student: req.params.id });
 
     res.json({ message: "Student deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+router.get("/:userId/my-courses", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const courses = await Course.find({ enrolledStudents: userId });
+    res.json(courses);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

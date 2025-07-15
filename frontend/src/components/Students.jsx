@@ -89,6 +89,17 @@ const StudentList = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
+  const handleDeleteStudent = async (studentId) => {
+  if (!window.confirm('Are you sure you want to delete this student?')) return;
+  try {
+    await axios.delete(`http://localhost:5000/api/students/${studentId}`);   
+     setStudents(prev => prev.filter(s => s._id !== studentId));
+  } catch (err) {
+    alert('Failed to delete student.');
+  }
+};
+
+  
   // Render Academic Details Section
   const renderAcademicDetails = () => (
     <div>
@@ -364,7 +375,11 @@ const StudentList = () => {
                   <tbody>
                     {currentEntries.map(student => (
                       <tr key={student._id}>
-                        <td>{student._id}</td>
+                        <td>
+                          {student._id
+                            ? `${student._id.slice(0, 4)}${student._id.slice(-4)}`
+                            : ''}
+                        </td>
                         <td>{student.firstName} {student.lastName}</td>
                         <td>{student.email}</td>
                         <td>
@@ -374,10 +389,8 @@ const StudentList = () => {
                         </td>
                         <td>
                           <div className="btn-group">
-                            <button className="btn btn-sm btn-primary">
-                              <i className="bi bi-pencil-square"></i>
-                            </button>
-                            <button className="btn btn-sm btn-danger">
+                      
+                            <button className="btn btn-sm btn-danger"  onClick={() => handleDeleteStudent(student._id)}>
                               <i className="bi bi-trash"></i>
                             </button>
                           </div>

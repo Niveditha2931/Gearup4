@@ -1,5 +1,5 @@
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Checkbox } from "./comp/ui/checkbox";
+import { Label } from "./comp/ui/label";
 import {
   Select,
   SelectContent,
@@ -8,8 +8,8 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+} from "./comp/ui/select";
+import { Separator } from "./comp/ui/separator";
 import React, { useState } from "react";
 
 const categories = [

@@ -81,6 +81,7 @@ app.use("/api/categories", categoryRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/settings', settingsRoutes);
 
+
 // Start server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 

@@ -1,5 +1,6 @@
 /* Sidebar Styles */
 /* Dashboard Section */
+body { margin: 0; }
 .content-section {
     padding: 20px;
     background-color: #f8f9fa;

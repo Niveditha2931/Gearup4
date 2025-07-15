@@ -38,7 +38,7 @@ const addCourse = async (req, res) => {
             category,
             description,
             level,
-            status: status || "Active",
+            status: status || "Free",
             sections,
             image
         });

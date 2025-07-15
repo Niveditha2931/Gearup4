@@ -1,5 +1,4 @@
-import React, { useState,useContext
- } from "react";
+import React, { useState,useContext} from "react";
 import axios from "axios";
 import { userAdminContextObj } from "../context/UserAdmin";
 import { useNavigate } from "react-router-dom";
@@ -7,8 +6,8 @@ import { useNavigate } from "react-router-dom";
 function Login({setShowLogin}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [type, setType] = useState("user"); // default to user
   const [error, setError] = useState("");
+  const [type, setType] = useState("student");
   let {currentUser,setCurrentUser}=useContext(userAdminContextObj)
   const navigate=useNavigate()
 
@@ -16,24 +15,23 @@ function Login({setShowLogin}) {
     e.preventDefault();
     setError("");
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", { email, password, type });
+      const res = await axios.post("http://localhost:5000/api/auth/login", { email, password,role:type });
       setCurrentUser(res.data.user)
       localStorage.setItem("currentUser",JSON.stringify(res.data.user))
-      navigate("/dash")
-      
-    } catch (err) {
-      setError(
-        err.response?.data?.error 
-      );
+     if (res.data.user.role === "admin") {
+      navigate("/dash");
+    } else {
+      navigate("/studash");
     }
-  };
-
-  if(currentUser){
-    navigate("/dash")
+  } catch (err) {
+    setError(
+      err.response?.data?.error 
+    );
   }
+ };
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100" style={{ background: "linear-gradient(to bottom, #1a237e, #0d47a1)" }}>
+    <div className="d-flex justify-content-center align-items-center vh-100" style={{ background: "linear-gradient(to bottom, #1a237e, #0d47a1)" ,minHeight:"100vh"}}>
       <div className="card p-4 shadow" style={{ minWidth: 350 }}>
         <h2 className="mb-4 text-center" style={{ color: "#1a237e" }}>Login</h2>
         {error && <div className="alert alert-danger">{error}</div>}
@@ -68,7 +66,7 @@ function Login({setShowLogin}) {
               required
             >
               <option value="user">Student</option>
-              <option value="lecturer">Lecturer</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
           <button type="submit" className="btn btn-primary w-100">Login</button>
