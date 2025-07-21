@@ -16,6 +16,15 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+router.get("/courses/enabled", async (req, res) => {
+  try {
+    const courses = await Course.find({ enabled: true });
+    res.json(courses);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 // Get student details with enrollments and academic records
 router.get("/:id", async (req, res) => {
@@ -111,10 +120,10 @@ router.delete("/:id", async (req, res) => {
 });
 
 
-router.get("/:userId/my-courses", async (req, res) => {
+router.get("/:studentId/my-courses", async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const courses = await Course.find({ enrolledStudents: userId });
+    const enrollments = await Enrollment.find({ student: req.params.studentId }).populate("course");
+    const courses = enrollments.map(enr => enr.course);
     res.json(courses);
   } catch (err) {
     res.status(500).json({ message: err.message });
