@@ -30,6 +30,7 @@ app.use('/api/admin',adminRoutes)
 app.use('/api/courses', require('./routes/courseRoutes'));
 app.use("/api/lessons", lessonRoutes);
 app.use("/api/quizzes", quizRoutes);
+app.use("/api/payment", require("./routes/paymentRoutes"));
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use('/api/reports', reportRoutes);

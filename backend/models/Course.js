@@ -31,16 +31,23 @@ const SectionSchema = new mongoose.Schema({
 });
 
 const CourseSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    category: { type: String, required: true },
-    description: { type: String, required: true },
-    level: { type: String, enum: ["Beginner", "Intermediate", "Advanced"], required: true },
-    sections: [SectionSchema],
-    enrolledStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    status: { type: String, enum: ["Free", "Paid"], default: "Free" },
-    image: { type: String },
-    totolStudentsEnrolled: { type: Number },
-    enabled: { type: Boolean, default: true }
+  title: { type: String, required: true },
+  category: { type: String, required: true },
+  description: { type: String, required: true },
+  level: { type: String, enum: ["Beginner", "Intermediate", "Advanced"], required: true },
+  sections: [SectionSchema],
+  enrolledStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  status: { type: String, enum: ["Free", "Paid"], default: "Free" },
+  amount: {
+    type: Number,
+    required: function () {
+      return this.status === "Paid";
+    },
+    min: 0
+  },
+  image: { type: String },
+  totolStudentsEnrolled: { type: Number },
+  enabled: { type: Boolean, default: true }
 });
 
 module.exports = mongoose.model("Course", CourseSchema);

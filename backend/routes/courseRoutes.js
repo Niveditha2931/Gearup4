@@ -67,15 +67,12 @@ router.post(
   addQuizToSection
 );
 
-// To update a section or quiz/lesson inside a section, you should use the updateCourse endpoint with the updated nested structure.
-// Example: router.put('/update/:id', updateCourse);
-
 // Update a lesson in a section
 router.put('/update-lesson/:courseId/:sectionId/:lessonId', async (req, res) => {
   const { courseId, sectionId, lessonId } = req.params;
   const update = req.body;
   try {
-    const course = await require('../models/Course').findById(courseId);
+    const course = await Course.findById(courseId);
     if (!course) return res.status(404).json({ message: "Course not found" });
     const section = course.sections.id(sectionId);
     if (!section) return res.status(404).json({ message: "Section not found" });
@@ -95,7 +92,7 @@ router.put('/update-quiz/:courseId/:sectionId/:quizId', async (req, res) => {
   const { courseId, sectionId, quizId } = req.params;
   const update = req.body;
   try {
-    const course = await require('../models/Course').findById(courseId);
+    const course = await Course.findById(courseId);
     if (!course) return res.status(404).json({ message: "Course not found" });
     const section = course.sections.id(sectionId);
     if (!section) return res.status(404).json({ message: "Section not found" });
@@ -110,6 +107,48 @@ router.put('/update-quiz/:courseId/:sectionId/:quizId', async (req, res) => {
   }
 });
 
+// Search courses - NEW API ENDPOINT
+router.get('/search', async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.trim() === '') {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+
+    // Create search criteria - search in title, subtitle, description, etc.
+    const searchRegex = new RegExp(query, 'i'); // case-insensitive search
+    
+    const courses = await Course.find({
+      $and: [
+        { enabled: true }, // Only show enabled courses
+        {
+          $or: [
+            { title: searchRegex },
+            { subtitle: searchRegex },
+            { description: searchRegex },
+            { level: searchRegex },
+            { 'creator.name': searchRegex }
+          ]
+        }
+      ]
+    }).populate('creator', 'name email');
+
+    res.json({
+      success: true,
+      courses: courses,
+      count: courses.length
+    });
+    
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to search courses",
+      error: error.message 
+    });
+  }
+});
 
 router.get("/every", async (req, res) => {
   try {
