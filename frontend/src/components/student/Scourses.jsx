@@ -7,10 +7,10 @@ const Scourses = () => {
   const [isError, setIsError] = useState(false);
 
   useEffect(() => {
-    fetch("/api/courses/all")
+    fetch("/api/courses/every")
       .then(res => res.json())
       .then(data => {
-        setCourses(data); // data is an array of courses
+        setCourses(data);
         setIsLoading(false);
       })
       .catch(() => {
@@ -22,10 +22,10 @@ const Scourses = () => {
   if (isError) return <h1>Some error occurred while fetching courses.</h1>;
 
   return (
-    <div className="bg-light">
+    <div className="bg-light pt-5 me-6">
       <div className="container p-6">
-        <h2 className="font-bold text-3xl text-center mb-10">Our Courses</h2>
-        <div className="row">
+        <h1 className="c font-bold text-center ">Our Courses</h1>
+        <div className="row mt-5 ms-5 ps-5 ">
           {isLoading
             ? Array.from({ length: 8 }).map((_, index) => (
                 <div className="col-md-3 mb-4" key={index}>

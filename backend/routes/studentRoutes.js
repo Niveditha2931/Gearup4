@@ -4,9 +4,9 @@ const Enrollment = require("../models/Enrollment");
 const AcademicRecord = require("../models/AcademicRecord");
 const Attendance = require("../models/Attendance");
 const Course = require("../models/Course");
-
+const bcrypt = require("bcryptjs");
 const router = express.Router();
-
+const User = require("../models/User");
 // Get all students
 router.get("/", async (req, res) => {
   try {
@@ -16,6 +16,15 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+router.get("/courses/enabled", async (req, res) => {
+  try {
+    const courses = await Course.find({ enabled: true });
+    res.json(courses);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 // Get student details with enrollments and academic records
 router.get("/:id", async (req, res) => {
@@ -37,6 +46,22 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+
+router.get("/:id/profile", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({
+      fullName: `${user.firstName} ${user.lastName}`,
+      email: user.email,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 // Create new student
 router.post("/", async (req, res) => {
@@ -111,10 +136,35 @@ router.delete("/:id", async (req, res) => {
 });
 
 
-router.get("/:userId/my-courses", async (req, res) => {
+
+// Update password
+router.put("/:id/update-password", async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const courses = await Course.find({ enrolledStudents: userId });
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(400).json({ error: "Incorrect current password" });
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+module.exports = router;
+
+
+
+router.get("/:studentId/my-courses", async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find({ student: req.params.studentId }).populate("course");
+    const courses = enrollments.map(enr => enr.course);
     res.json(courses);
   } catch (err) {
     res.status(500).json({ message: err.message });
