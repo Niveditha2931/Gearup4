@@ -17,9 +17,12 @@ const QuizSchema = new mongoose.Schema({
 
 const LessonSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    type: { type: String, enum: ["Video", "Text", "PDF", "Document", "Image"], required: true },
-    summary: { type: String },
+    type: { type: String, enum: ["Video", "Text", "PDF", "Document", "Image", "Excel"], required: true },
+    description: { type: String },
+    textContent: { type: String },
     videoUrl: { type: String },
+    imageUrl: { type: String },
+    fileUrl: { type: String },
     enabled: { type: Boolean, default: true }
 });
 
@@ -38,6 +41,8 @@ const CourseSchema = new mongoose.Schema({
     sections: [SectionSchema],
     enrolledStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     status: { type: String, enum: ["Free", "Paid"], default: "Free" },
+    price:{type: Number,default: 0 },
+    duration:{type:Number},
     image: { type: String },
     totolStudentsEnrolled: { type: Number },
     enabled: { type: Boolean, default: true }

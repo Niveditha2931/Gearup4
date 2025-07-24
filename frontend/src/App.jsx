@@ -24,6 +24,9 @@ import ScourseProgress from "./components/student/ScourseProgress";
 import PurchaseCourseProtectedRoute from "./components/student/PurchaseCourseProtectedRoute";
 import Scourses from "./components/student/Scourses";
 import StudentNavbar from "./components/student/Navbar";
+import CourseDetails from "./components/CourseDetails";
+import SectionDetails from "./components/SectionDetails";
+import LessonDetails from "./components/LessonDetails";
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -53,6 +56,9 @@ function App() {
                   <Route path="/students" element={<ErrorBoundary><Students /></ErrorBoundary>} />
                   <Route path="/faculty" element={<Faculty />} />
                   <Route path="/courses" element={<ErrorBoundary><Courses /></ErrorBoundary>} />
+                  <Route path="/courses/:courseId" element={<ErrorBoundary><CourseDetails /></ErrorBoundary>} />
+                  <Route path="/courses/:courseId/sections/:sectionId" element={<ErrorBoundary><SectionDetails /></ErrorBoundary>} />
+                  <Route path="/courses/:courseId/sections/:sectionId/lessons/:lessonId" element={<ErrorBoundary><LessonDetails /></ErrorBoundary>} />
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/settings" element={<Settings />} />

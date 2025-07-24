@@ -15,8 +15,7 @@ const getCourses= async (req, res) => {
 
 const addCourse = async (req, res) => {
     try {
-        // For multipart/form-data, fields are in req.body, file in req.file
-        const { title, category, description, level, status } = req.body;
+        const { title, category, description, level, status ,estimatedDuration,price} = req.body;
         let sections = [];
         if (req.body.sections) {
             try {
@@ -25,22 +24,16 @@ const addCourse = async (req, res) => {
                 sections = [];
             }
         }
-
-        // Save image path if file uploaded
-        let image = null;
-        if (req.file) {
-            image = `/uploads/${req.file.filename}`;
-        }
-
-        // Default status to "Active" if not provided
+        console.log(price)
         const newCourse = new Course({
             title,
             category,
             description,
             level,
             status: status || "Free",
+            price:price,
+            duration:estimatedDuration,
             sections,
-            image
         });
 
         const savedCourse = await newCourse.save();
@@ -116,29 +109,16 @@ const getStatistics = async (req, res) => {
 const addLessonToSection = async (req, res) => {
     try {
         const { courseId, sectionId } = req.params;
-        const { title, type, summary, videoUrl } = req.body;
-        let fileUrl = null;
-        if (req.file) {
-            fileUrl = `/uploads/${req.file.filename}`;
-        }
-
-        // Validate required fields
-        if (!title || !type) {
-            return res.status(400).json({ message: "Title and type are required for a lesson." });
-        }
-
-        // Build lesson object
-        const lesson = {
+        const { title, type, description, textContent, videoUrl, imageUrl, fileUrl } = req.body;
+        let lesson = {
             title,
             type,
-            summary,
+            description,
         };
-        if (type === "Video" && videoUrl) {
-            lesson.videoUrl = videoUrl;
-        }
-        if (fileUrl) {
-            lesson.fileUrl = fileUrl;
-        }
+        if (type === "Text" && textContent) lesson.textContent = textContent;
+        if (type === "Video" && videoUrl) lesson.videoUrl = videoUrl;
+        if (type === "Image" && imageUrl) lesson.imageUrl = imageUrl;
+        if (["PDF", "Document", "Excel"].includes(type) && fileUrl) lesson.fileUrl = fileUrl;
 
         // Find course and section
         const course = await Course.findById(courseId);
@@ -147,12 +127,8 @@ const addLessonToSection = async (req, res) => {
         const section = course.sections.id(sectionId);
         if (!section) return res.status(404).json({ message: "Section not found" });
 
-        // Add lesson to section
         section.lessons.push(lesson);
-
-        // Mark modified for nested array
         course.markModified("sections");
-
         await course.save();
 
         res.status(200).json({
@@ -328,6 +304,16 @@ const toggleQuizEnabled = async (req, res) => {
     }
 };
 
+const getCourseById = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+    res.status(200).json({ course });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
 module.exports = {
     addCourse,
     getCourses,
@@ -343,4 +329,5 @@ module.exports = {
     toggleSectionEnabled,
     toggleLessonEnabled,
     toggleQuizEnabled,
+    getCourseById,
 };
