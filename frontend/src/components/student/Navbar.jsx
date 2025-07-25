@@ -17,7 +17,7 @@ const StudentNavbar = () => {
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
       `}</style>
       
-      <nav className="navbar navbar-expand-lg custom-navbar">
+      <nav className="navbar navbar-expand-lg custom-navbar z-70">
         <div className="container-fluid px-4 py-2">
           {/* Enhanced Brand Logo */}
           <Link className="navbar-brand brand-enhanced" to="/studash">

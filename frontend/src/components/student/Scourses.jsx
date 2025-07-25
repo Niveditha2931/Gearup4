@@ -582,7 +582,7 @@ const Scourses = () => {
         .filter-label {
           font-size: 0.9rem;
           font-weight: 500;
-          color: #e9eef7ff;
+          color: #756cc9ff;
           white-space: nowrap;
         }
 
