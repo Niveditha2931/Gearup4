@@ -1,8 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./Settings.css";
 
 function Settings() {
   const [activeTab, setActiveTab] = useState("system"); // State to track the active tab
+  const settingsRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setActiveTab(""); // Close tab content if clicked outside
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Tab content for System Settings
   const renderSystemSettings = () => (
@@ -110,7 +121,7 @@ function Settings() {
   );
 
   return (
-    <div className="settings-container">
+    <div className="settings-container" ref={settingsRef}>
       <h2>Settings</h2>
       {/* Tabs */}
       <div className="tabs d-flex gap-3 mb-4">

@@ -8,6 +8,7 @@ import Dashboard from "./components/Dashboard";
 import Students from "./components/Students";
 import Faculty from "./components/Faculty";
 import Courses from "./components/Courses";
+import CourseDetails from "./components/CourseDetails";
 import Reports from "./components/Reports";
 import Messages from "./components/Messages";
 import Settings from "./components/Settings";
@@ -26,6 +27,8 @@ import ScourseProgress from "./components/student/ScourseProgress";
 import PurchaseCourseProtectedRoute from "./components/student/PurchaseCourseProtectedRoute";
 import Scourses from "./components/student/Scourses";
 import StudentNavbar from "./components/student/Navbar";
+import SectionDetails from "./components/SectionDetails";
+import LessonDetails from "./components/LessonDetails";
 
 // Styles
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -37,15 +40,10 @@ import { userAdminContextObj } from "./context/UserAdmin";
 
 function App() {
   const { currentUser, setCurrentUser } = useContext(userAdminContextObj);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("currentUser"));
-    setCurrentUser(user);
-    setLoading(false);
+    setCurrentUser(JSON.parse(localStorage.getItem("currentUser")));
   }, []);
-
-  if (loading) return null;
 
   return (
     <Router>

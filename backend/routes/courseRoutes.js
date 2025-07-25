@@ -16,7 +16,8 @@ const {
   toggleSectionEnabled,
   toggleLessonEnabled,
   addQuizToSection,
-  toggleQuizEnabled
+  toggleQuizEnabled,
+  getCourseById
 } = require('../controllers/courseController');
 
 const router = express.Router();
@@ -33,6 +34,7 @@ const upload = multer({ storage });
 router.post('/add', upload.single('image'), addCourse);
 router.get('/all', getCourses);
 router.get('/statistics', getStatistics);
+router.get('/:id', getCourseById);
 router.put('/update/:id', updateCourse);
 router.delete('/delete/:id', deleteCourse);
 

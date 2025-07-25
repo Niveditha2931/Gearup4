@@ -17,9 +17,12 @@ const QuizSchema = new mongoose.Schema({
 
 const LessonSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    type: { type: String, enum: ["Video", "Text", "PDF", "Document", "Image"], required: true },
-    summary: { type: String },
+    type: { type: String, enum: ["Video", "Text", "PDF", "Document", "Image", "Excel"], required: true },
+    description: { type: String },
+    textContent: { type: String },
     videoUrl: { type: String },
+    imageUrl: { type: String },
+    fileUrl: { type: String },
     enabled: { type: Boolean, default: true }
 });
 
