@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 const Profile = () => {
   const user = JSON.parse(localStorage.getItem("currentUser"));
+
   const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
@@ -17,29 +18,28 @@ const Profile = () => {
   useEffect(() => {
     if (!user || !user.token) return;
 
-    // ✅ Updated to match new backend route
     fetch(`/api/student/${user._id}/profile`, {
       headers: {
         Authorization: `Bearer ${user.token}`,
       },
     })
+      
       .then((res) => res.json())
       .then((data) => {
-        const fullName = data.fullName || "";
-        const [firstName, ...rest] = fullName.split(" ");
-        const lastName = rest.join(" ");
+        console.log("Fetched profile data:", data);
         setUserData({
-          firstName: firstName || "",
-          lastName: lastName || "",
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
           email: data.email || "",
         });
+        console.log("API Response:", data);
       })
       .catch((err) => console.error("Failed to fetch profile:", err));
+
   }, []);
 
   const handleSave = async (e) => {
     e.preventDefault();
-    const fullName = `${userData.firstName} ${userData.lastName}`.trim();
 
     const res = await fetch(`/api/student/${user._id}`, {
       method: "PUT",
@@ -47,7 +47,10 @@ const Profile = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${user.token}`,
       },
-      body: JSON.stringify({ fullName }),
+      body: JSON.stringify({
+        firstName: userData.firstName.trim(),
+        lastName: userData.lastName.trim(),
+      }),
     });
 
     if (res.ok) {
@@ -94,7 +97,7 @@ const Profile = () => {
           <input
             type="text"
             className="form-control"
-            value={userData.firstName}
+            value={userData.firstName || ""}
             onChange={(e) => setUserData({ ...userData, firstName: e.target.value })}
           />
         </div>
@@ -103,11 +106,10 @@ const Profile = () => {
           <input
             type="text"
             className="form-control"
-            value={userData.lastName}
+            value={userData.lastName || ""}
             onChange={(e) => setUserData({ ...userData, lastName: e.target.value })}
           />
         </div>
-      
         <button className="btn btn-primary">Save Changes</button>
       </form>
 

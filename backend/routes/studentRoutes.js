@@ -48,19 +48,21 @@ router.get("/:id", async (req, res) => {
 });
 
 
-router.get("/:id/profile", async (req, res) => {
+router.get('/:id/profile', async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const student = await Student.findById(req.params.id).select('firstName lastName email');
 
-    res.json({
-      fullName: `${user.firstName} ${user.lastName}`,
-      email: user.email,
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    res.json(student);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 
 // Create new student

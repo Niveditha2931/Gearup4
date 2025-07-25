@@ -9,25 +9,40 @@ const MyLearning = () => {
     const user = JSON.parse(localStorage.getItem("currentUser"));
     if (!user) return;
     fetch(`/api/student/${user._id}/my-courses`)
-      .then(res => res.json())
-      .then(data => setCourses(data || []));
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch enrolled courses");
+        return res.json();
+      })
+      .then(data => {
+        // If backend returns only course IDs, fetch course details for each
+        if (Array.isArray(data) && typeof data[0] === "string") {
+          Promise.all(
+            data.map(id =>
+              fetch(`/api/courses/${id}`).then(res => res.json())
+            )
+          ).then(fullCourses => setCourses(fullCourses));
+        } else {
+          setCourses(data || []);
+        }
+      })
+      .catch(err => console.error(err));
   }, []);
 
   return (
     <div className="container my-5">
       <h2 className="mb-4">My Learning</h2>
       {courses.length === 0 ? (
-        <div>No courses found.</div>
+        <div className="text-muted">No courses found.</div>
       ) : (
         <div className="row">
           {courses.map(course => (
             <div
-              className="col-md-4 mb-4"
+              className="col-md-3 mb-4"
               key={course._id}
+              onClick={() => navigate(`/course-detail/${course._id}`)}
               style={{ cursor: "pointer" }}
-              onClick={() => navigate(`/course-progress/${course._id}`)}
             >
-              <div className="card h-100 shadow-sm">
+              <div className="card h-100 shadow-sm text-center">
                 <img
                   src={course.image || "https://via.placeholder.com/300x180?text=No+Image"}
                   alt={course.title}
@@ -36,8 +51,6 @@ const MyLearning = () => {
                 />
                 <div className="card-body">
                   <h5 className="card-title">{course.title}</h5>
-                  <p className="card-text">{course.description}</p>
-                  <span className="badge bg-primary">{course.level}</span>
                 </div>
               </div>
             </div>
